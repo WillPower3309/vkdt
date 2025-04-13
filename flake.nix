@@ -12,8 +12,55 @@
         pkgs = import nixpkgs { inherit system; };
       in
       {
-        devShell = with pkgs; mkShell {
-          inputsFrom = [ pkgs.vkdt ];
+        packages = rec {
+          vkdt-git = pkgs.stdenv.mkDerivation {
+            pname = "vkdt";
+            version = "git";
+
+            src = pkgs.lib.cleanSource ./.;
+
+            nativeBuildInputs = with pkgs; [
+              cargo
+              clang
+              cmake
+              glslang
+              llvm
+              llvmPackages.openmp
+              pkg-config
+              rsync
+              rustPlatform.cargoSetupHook
+              xxd
+            ];
+
+            buildInputs = with pkgs; [
+              alsa-lib
+              exiv2
+              ffmpeg
+              freetype
+              glfw
+              libjpeg
+              libmad
+              libvorbis
+              llvmPackages.openmp
+              pugixml
+              vulkan-headers
+              vulkan-loader
+              vulkan-tools
+            ];
+
+            dontUseCmakeConfigure = true;
+
+            makeFlags = [
+              "DESTDIR=$(out)"
+              "prefix="
+            ];
+          };
+
+          default = vkdt-git;
+        };
+
+        devShells.default = pkgs.mkShell {
+          inputsFrom = [ self.packages.${system}.vkdt-git ];
         };
       }
     );
